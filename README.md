@@ -18,6 +18,9 @@ Commands:
   haltontp         - Toggles automatic halt upon reaching 1000 TP
   verbose          - Toggles verbose mode.  This will provide feedback on what the addon is doing and why.
 
+
+
+
 --Copyright © 2022, Banggugyangu
 --All rights reserved.
 
