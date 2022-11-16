@@ -102,8 +102,6 @@ ashita.events.register('packet_in', 'packet_in_cb', function (e)
                 autora.running = true;
                 print(chat.header('AutoRA:  Auto Fire Enabled'));
             elseif (not autora.Firing) then
-                print(chat.header(summedDelay));
-                print(chat.header('Firing'));
                 shoot();
             end
         else
