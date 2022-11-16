@@ -33,7 +33,7 @@ local autora = T{
     Firing = false;
     settings = settings.load(default_settings),
 };
-local summedDelay = (autora.settings.Delay + autora.settings.DelayOffset) / 60;
+local summedDelay = (autora.settings.Delay + autora.settings.DelayOffset) / 90;
 
 settings.register('settings', 'settings_update', function(s)
     if (s ~=nil) then
