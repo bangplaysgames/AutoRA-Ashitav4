@@ -26,12 +26,14 @@ local default_settings = T{
         verbose = true;
 };
 
---Settings Variables--
+--Addon Variables--
 local autora = T{
     auto = false;
     running = false;
+    Firing = false;
     settings = settings.load(default_settings),
 };
+local summedDelay = (autora.settings.Delay + autora.settings.DelayOffset) / 60;
 
 settings.register('settings', 'settings_update', function(s)
     if (s ~=nil) then
@@ -39,7 +41,7 @@ settings.register('settings', 'settings_update', function(s)
     end
 
     settings.save();
-end)
+end);
 
 local makeString = function(table, value)
     if (table[value] == nil) then
@@ -72,7 +74,11 @@ playerData.TP = party:GetMemberTP(0);
 
 --Send Shoot Command to Client--
 local shoot = function()
+    autora.Firing = true;
     AshitaCore:GetChatManager():QueueCommand(-1, '/shoot <t>');
+    coroutine.sleep(summedDelay);
+    autora.Firing = false;
+
 end
 
 --Logic--
@@ -86,15 +92,18 @@ ashita.events.register('packet_in', 'packet_in_cb', function (e)
     playerData.statusID = playerEntity:GetStatus(playerIndex);
     playerData.TP = party:GetMemberTP(0);
 
-
+    if(not autora.auto) then
+        return;
+    end
 
     if(autora.auto and playerData.status == 'Engaged') then
         if(playerData.TP <= 1000 or not autora.settings.HaltOnTP) then
             if(not autora.running) then
                 autora.running = true;
                 print(chat.header('AutoRA:  Auto Fire Enabled'));
-            elseif (autora.running) then
-                coroutine.sleep((autora.settings.Delay + autora.settings.DelayOffset)/60);
+            elseif (not autora.Firing) then
+                print(chat.header(summedDelay));
+                print(chat.header('Firing'));
                 shoot();
             end
         else
@@ -106,7 +115,7 @@ ashita.events.register('packet_in', 'packet_in_cb', function (e)
 
             end
         end
-    elseif(autora.auto and playerData.status == 'Idle') then
+    elseif((autora.auto or autora.running) and playerData.status == 'Idle') then
         autora.auto = false;
         autora.running = false;
         if(autora.settings.verbose) then
@@ -132,15 +141,11 @@ ashita.events.register('command', 'command_cb', function (e)
         return;
     end
 
-    if (#args >= 2 and args[2]:any('wait')) then
-        wait(args[3]);
-        return;
-    end
+
     if (#args >= 2 and args[2]:any('start')) then
         if(playerData.status == 'Engaged') then
             autora.auto = true;
             shoot();
-            print(chat.header(auto));
 
         else
             if(autora.settings.verbose) then
