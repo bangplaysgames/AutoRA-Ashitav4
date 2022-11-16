@@ -119,9 +119,7 @@ end);
 
 function wait(seconds)
     local ostime_vari = os.clock() + seconds;
-    if (os.clock() >= ostime_vari) then
         shoot();
-    end
 end
 
 ashita.events.register('command', 'command_cb', function (e)
