@@ -95,6 +95,7 @@ ashita.events.register('packet_in', 'packet_in_cb', function (e)
                 print(chat.header('AutoRA:  Auto Fire Enabled'));
             elseif (autora.running) then
                 wait((autora.settings.Delay + autora.settings.DelayOffset)/60);
+                shoot();
             end
         else
             autora.auto = false;
@@ -119,7 +120,7 @@ end);
 
 function wait(seconds)
     local ostime_vari = os.clock() + seconds;
-        shoot();
+    repeat until os.clock() >= ostime_vari;
 end
 
 ashita.events.register('command', 'command_cb', function (e)
