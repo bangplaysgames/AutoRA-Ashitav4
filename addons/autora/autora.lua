@@ -34,7 +34,6 @@ local autora = T{
     Firing = false;
     settings = settings.load(default_settings),
 };
-local summedDelay = (autora.settings.Delay + autora.settings.DelayOffset) / 90;
 
 settings.register('settings', 'settings_update', function(s)
     if (s ~=nil) then
@@ -65,7 +64,6 @@ local StatusTable = T{
 --Player Information Build--
 local playerData = {};
 local playerEntity = AshitaCore:GetMemoryManager():GetEntity();
-local player = AshitaCore:GetMemoryManager():GetPlayer();
 local party = AshitaCore:GetMemoryManager():GetParty();
 local playerIndex = party:GetMemberTargetIndex(0);
 playerData.statusID = playerEntity:GetStatus(playerIndex);
