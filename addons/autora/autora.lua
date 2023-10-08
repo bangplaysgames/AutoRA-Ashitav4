@@ -89,24 +89,29 @@ ashita.events.register('d3d_present', 'present_cb', function()
     if(playerData.status == 'Engaged')then
 
         if(autora.auto == true)then
-            if(playerData.TP >= 1000)then
-                autora.auto = false;
-                print(chat.header('AutoRA:  Auto Fire Blocked'));
-                print(chat.message('Reason:  1000 TP'));
-                return;
-            end
-            if(curTime > delay and gPacket.Firing == false)then
-                gPacket.Firing = true;
-                shoot();
+            if(autora.HaltOnTP == true)then
+                if(playerData.TP >= 1000)then
+                    autora.auto = false;
+                    print(chat.header('AutoRA:  Auto Fire Blocked'));
+                    print(chat.message('Reason:  1000 TP'));
+                    return;
+                end
             end
         end
+        if(curTime > delay and gPacket.Firing == false)then
+            gPacket.Firing = true;
+            shoot();
+        end
 
+
+                
     else
-
-        if(autora.settings.verbose and autora.auto == true) then
+        if(autora.auto == true)then
             autora.auto = false;
-            print(chat.header('AutoRA:  Auto Fire Blocked'));
-            print(chat.message('Reason:  Player Not Engaged with Target'));
+            if(autora.settings.verbose) then
+                print(chat.header('AutoRA:  Auto Fire Blocked'));
+                print(chat.message('Reason:  Player Not Engaged with Target'));
+            end
         end
 
     end
