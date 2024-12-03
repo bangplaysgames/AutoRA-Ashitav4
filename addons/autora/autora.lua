@@ -22,7 +22,6 @@ gPacket = require('packetHandler');
 local default_settings = T{
 
         HaltOnTP = true,
-        HaltTP=1000,
         Delay = 0,
         DelayOffset = 0,
         verbose = true;
@@ -90,29 +89,31 @@ ashita.events.register('d3d_present', 'present_cb', function()
     if(playerData.status == 'Engaged')then
 
         if(autora.auto == true)then
-            if(autora.HaltOnTP == true)then
-                if(playerData.TP >= autora.settings.HaltTP)then
-                    autora.auto = false;
+            if(playerData.TP >= 1000)then
+                autora.auto = false;
+                if(autora.settings.verbose == true)then
                     print(chat.header('AutoRA:  Auto Fire Blocked'));
-                    print(chat.message('Reason: '..tostring(autora.settings.HaltTP)' tp reached.'));
-                    return;
+                    print(chat.message('Reason:  1000 TP'));
                 end
+                return;
             end
-        end
-        if(curTime > delay and gPacket.Firing == false)then
-            gPacket.Firing = true;
-            shoot();
+            if(curTime > delay and gPacket.Firing == false)then
+                gPacket.Firing = true;
+                shoot();
+            end
+            if(curTime >= delay + 5 and gPacket.Firing == true)then
+                gPacket.Firing = false;
+            end
+        else
+            gPacket.Firing = false;
         end
 
-
-                
     else
-        if(autora.auto == true)then
+
+        if(autora.settings.verbose == true and autora.auto == true) then
             autora.auto = false;
-            if(autora.settings.verbose) then
-                print(chat.header('AutoRA:  Auto Fire Blocked'));
-                print(chat.message('Reason:  Player Not Engaged with Target'));
-            end
+            print(chat.header('AutoRA:  Auto Fire Blocked'));
+            print(chat.message('Reason:  Player Not Engaged with Target'));
         end
 
     end
@@ -156,10 +157,7 @@ ashita.events.register('command', 'command_cb', function (e)
         autora.settings.HaltOnTP = not autora.settings.HaltOnTP;
         print(chat.header('Halt On TP toggled to:  '..tostring(autora.settings.HaltOnTP)));
     end
-    if(#args >=3 and args[2]:any('changehalttp')) then
-        autora.settings.HaltTP = tonumber(args[3]);
-        print(chat.header('Halt TP updated to:  '..tostring(autora.settings.HaltTP)));
-    end
+
 end);
 
 ashita.events.register('load', 'load_cb', function()
@@ -172,3 +170,4 @@ ashita.events.register('unload', 'unload_cb', function()
     AshitaCore:GetChatManager():QueueCommand(-1, '/unbind !D');
     settings.save();
 end)
+
