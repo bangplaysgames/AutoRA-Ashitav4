@@ -1,4 +1,4 @@
---[[]
+--[[
 ---MIT License---
 Copyright 2022 Banggugyangu
 
@@ -17,7 +17,7 @@ addon.version = '1.3';
 require('common');
 local chat = require('chat');
 local settings = require('settings');
-gPacket = require('packetHandler');
+local gPacket = require('packetHandler');
 
 local default_settings = T{
 
@@ -27,11 +27,12 @@ local default_settings = T{
     verbose = true;
 };
 
+local baseDelay = 3;
+local firingTimeout = 5;
+
 --Addon Variables--
 local autora = T{
     auto = false;
-    running = false;
-    Firing = false;
     settings = settings.load(default_settings),
 };
 
@@ -62,6 +63,18 @@ local StatusTable = T{
 
 local playerData = {};
 
+local getPlayerStatus = function()
+    local playerEntity = AshitaCore:GetMemoryManager():GetEntity();
+    local party = AshitaCore:GetMemoryManager():GetParty();
+    local playerIndex = party:GetMemberTargetIndex(0);
+    local statusID = playerEntity:GetStatus(playerIndex);
+    return statusID, makeString(StatusTable, statusID);
+end
+
+local getShotDelay = function()
+    return baseDelay + autora.settings.Delay + autora.settings.DelayOffset;
+end
+
 --Send Shoot Command to Client--
 local shoot = function()
     AshitaCore:GetChatManager():QueueCommand(-1, '/shoot <t>');
@@ -73,23 +86,18 @@ ashita.events.register('packet_in', 'packet_in_cb', function (e)
 end);
 
 ashita.events.register('d3d_present', 'present_cb', function()
-    --Player Information Build--
-    local playerEntity = AshitaCore:GetMemoryManager():GetEntity();
     local party = AshitaCore:GetMemoryManager():GetParty();
-    local playerIndex = party:GetMemberTargetIndex(0);
-    playerData.statusID = playerEntity:GetStatus(playerIndex);
-    playerData.status = makeString(StatusTable, playerEntity:GetStatus(playerIndex));
+    playerData.statusID, playerData.status = getPlayerStatus();
     playerData.TP = party:GetMemberTP(0);
 
-    local LastRA = gPacket.RAFinTime;
-    local delay = LastRA + 3;
-    local curTime = os.time();
-    playerData.TP = party:GetMemberTP(0);
+    local lastRA = gPacket.RAFinTime;
+    local delay = lastRA + getShotDelay();
+    local curTime = os.clock();
 
     if(playerData.status == 'Engaged')then
 
         if(autora.auto == true)then
-            if(playerData.TP >= 1000)then
+            if(autora.settings.HaltOnTP and playerData.TP >= 1000)then
                 autora.auto = false;
                 if(autora.settings.verbose == true)then
                     print(chat.header('AutoRA:  Auto Fire Blocked'));
@@ -101,8 +109,9 @@ ashita.events.register('d3d_present', 'present_cb', function()
                 gPacket.Firing = true;
                 shoot();
             end
-            if(curTime >= delay + 5 and gPacket.Firing == true)then
+            if(curTime >= delay + firingTimeout and gPacket.Firing == true)then
                 gPacket.Firing = false;
+                gPacket.RAFinTime = curTime;
             end
         else
             gPacket.Firing = false;
@@ -110,10 +119,12 @@ ashita.events.register('d3d_present', 'present_cb', function()
 
     else
 
-        if(autora.settings.verbose == true and autora.auto == true) then
+        if(autora.auto == true) then
             autora.auto = false;
-            print(chat.header('AutoRA:  Auto Fire Blocked'));
-            print(chat.message('Reason:  Player Not Engaged with Target'));
+            if(autora.settings.verbose == true) then
+                print(chat.header('AutoRA:  Auto Fire Blocked'));
+                print(chat.message('Reason:  Player Not Engaged with Target'));
+            end
         end
 
     end
@@ -137,7 +148,8 @@ ashita.events.register('command', 'command_cb', function (e)
 
 
     if (#args >= 2 and args[2]:any('start')) then
-        if(playerData.statusID == 1) then
+        local statusID = getPlayerStatus();
+        if(statusID == 1) then
             autora.auto = true;
             shoot();
         end
@@ -151,10 +163,12 @@ ashita.events.register('command', 'command_cb', function (e)
     end
     if (#args >=2 and args[2]:any('verbose')) then
         autora.settings.verbose = not autora.settings.verbose;
+        settings.save();
         print(chat.header('Verbose mode toggled to:  '..tostring(autora.settings.verbose)));
     end
     if(#args >=2 and args[2]:any('haltontp')) then
         autora.settings.HaltOnTP = not autora.settings.HaltOnTP;
+        settings.save();
         print(chat.header('Halt On TP toggled to:  '..tostring(autora.settings.HaltOnTP)));
     end
 
@@ -170,4 +184,3 @@ ashita.events.register('unload', 'unload_cb', function()
     AshitaCore:GetChatManager():QueueCommand(-1, '/unbind !D');
     settings.save();
 end)
-

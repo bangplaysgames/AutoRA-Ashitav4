@@ -1,6 +1,3 @@
-local ffi = require('ffi');
-local chat = require('chat');
-
 local packet = {}
 
 packet.Player = 0;
@@ -23,7 +20,7 @@ packet.ActionPacket = function(pkt)
 
     if(user == packet.Player)then
         if(actionType == 2 or actionType == 8 or actionType == 12) then
-            packet.RAFinTime = os.time();
+            packet.RAFinTime = os.clock();
             packet.Firing = false;
         end
     end
